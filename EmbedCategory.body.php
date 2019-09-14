@@ -42,14 +42,14 @@ class EmbedCategory {
 	}
 
 	/**
-	 * Generate a string of HTML containing links to pages in a category, 
+	 * Generate a string of HTML containing links to pages in a category,
 	 * optionally including a 'more' link at the end.
 	 *
-	 * @param string $name The name of the category, not including the 
+	 * @param string $name The name of the category, not including the
 	 *                     Category: namespace
 	 * @param integer $limit The number of pages to link to.
-	 * @param boolean $showMore If there are more pages in the category than 
-	 *                          $limit, and this is true, a link to the 
+	 * @param boolean $showMore If there are more pages in the category than
+	 *                          $limit, and this is true, a link to the
 	 *                          category is added to the list of links.
 	 * @return string The HTML containing the page links.
 	 */
@@ -69,18 +69,18 @@ class EmbedCategory {
 		// generated, do so.
 		if( $wgEmbedCategoryLinkEmpty && !$category -> getPageCount() ) {
 			$catTitle = $category -> getTitle();
-			
+
 			return Html::rawElement( 'div', [],
-										 wfMessage( 'embedcategory-empty' ) .
-										 Html::rawElement( 'a',
-														   array( 'href' => $catTitle -> getLinkURL()),
-														   Html::element( 'strong',
-																		  [],
-																		  $catTitle -> getText())
-										 )										 
+									 wfMessage( 'embedcategory-empty' ) .
+									 Html::rawElement( 'a',
+													   array( 'href' => $catTitle -> getLinkURL()),
+													   Html::element( 'strong',
+																	  [],
+																	  $catTitle -> getText())
+									 )
 			);
 		}
-		
+
 		// Convert the list of category members to a string of HTML elements
 		$members  = $category -> getMembers( $limit );
 		while( $members -> valid() ) {
@@ -100,17 +100,17 @@ class EmbedCategory {
 		// 'show more' option is enabled, output a 'More' link at the end.
 		if( $showMore && $limit && $category -> getPageCount() > $limit ) {
 			$catTitle = $category -> getTitle();
-			
+
 			$result .= Html::rawElement( 'li', [],
 										 Html::rawElement( 'a',
 														   array( 'href' => $catTitle -> getLinkURL()),
 														   Html::element( 'strong',
 																		  [],
 																		  wfMessage( 'embedcategory-more' ))
-										 )										 
+										 )
 			);
 		}
-		
+
 		return Html::rawElement( 'ul', [ 'class' => 'category_members' ], $result );
 	}
 
@@ -131,7 +131,7 @@ class EmbedCategory {
 		if($args['category']) {
 			return Html::rawelement( 'div',
 									 array( 'class' => 'categorylist' ),
-									 self::buildCategoryList( $args['category'], $args['limit'], $args['showmore'] ) );			
+									 self::buildCategoryList( $args['category'], $args['limit'], $args['showmore'] ) );
 		} else {
 			return Html::rawelement( 'div',
 									 array( 'class' => 'categorylist error' ),

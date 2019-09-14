@@ -1,0 +1,12 @@
+{
+    "@metadata": {
+	"authors": [
+	    "Chris Page"
+	]
+    },
+    "embedcategory-desc": "Adds <nowiki><embedcategory /></nowiki> tag to provide embedded category lists",
+    "embedcategory-more": "More",
+    "embedcategory-empty": "No pages in category ",
+    "embedcategory-none": "No category specified",
+    "embedcategory-bad": "Illegal/unknown category selected"
+}

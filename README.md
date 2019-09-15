@@ -68,3 +68,17 @@ itself was updated! By default they are sorted most recently added/updated first
 to least recently added/updated last. If <code>byupdated</code> is set to <code>ASC</code>
 then the order is reversed: the oldest page is shown first, and the newest last.</dd>
 </dl>
+
+The body of the &lt;embedcategory&gt; tag may contain a list of pages to exclude from
+the list, which one line per page title to exclude. For example:
+
+
+```
+<embedcategory category="cats">
+Short Hair
+Cheshire
+</embedcategory>
+```
+
+will show a list of all pages in the `cats` category, except the pages for `Short Hair`
+or `Cheshire`, if they exist in the category.

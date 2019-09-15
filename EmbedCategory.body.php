@@ -28,19 +28,81 @@
 
 class EmbedCategory {
 
-	/**
-	 * Register the <embedcategory> tag with the Parser.
-	 *
-	 * @param $parser Parser instance of Parser
-	 * @return boolean Always returns true
+	/* =========================================================================
+	 *  General convenience functions
 	 */
-	public static function onParserFirstCallInit( &$parser ) {
-		// Adds the <embedcategory>...</embedcategory> tag to the parser.
-		$parser->setHook( 'embedcategory', 'EmbedCategory::parserHook' );
 
-		return true;
+	/**
+	 * Determine whether a parameter has been set, and if so return its value,
+	 * otherwise return a default.
+	 *
+	 * @param array  $args    The array containing the parameters.
+	 * @param string $name    The name of the parameter to fetch.
+	 * @param mixed  $default The value to return if the parameter is not set.
+	 * @return mixed The value set for the parameter, or the default.
+	 */
+	public static function getParameter( &$args, $name, $default = false) {
+
+		if( isset( $args[$name] ) ) {
+			return $args[$name];
+		}
+
+		return $default;
 	}
 
+
+	/**
+	 * Given the body of an embedcategory tag, generate an array of
+	 * page titles to ignore.
+	 *
+	 * @todo Potential enhancement would be to ignore lines that
+	 *       are not valid titles. Not sure if it's worth the
+	 *       time and overhead, though.
+	 *
+	 * @param string body The body of the embedcategory tag
+	 * @return array An array of page titles to ignore.
+	 */
+	public static function buildExcludeList( $body ) {
+
+		$lines = explode( "\n", $body );
+
+		# TODO: check lines are valid titles?
+
+		return $lines;
+	}
+
+
+	/**
+	 * Create an array containing sort parameters to pass to the
+	 * getMembersSortable() function.
+	 *
+	 * @param string|boolean $byupdated If true or a non-empty string, the
+	 *        sort will be set to be done by timestamp. If the string contains
+	 *        "ASC" then the sort will be ascending, otherwise it will default
+	 *        to descending. If false, the sort will be by sortkey ascending.
+	 * @return array An array containing the sort parameters.
+	 */
+	public static function getSortParams( $byupdated ) {
+
+		$sort = array( 'order' => 'cl_sortkey',
+					   'dir'   => 'ASC' );
+
+		if( $byupdated ) {
+			$sort['order'] = 'cl_timestamp';
+			$sort['dir']   = 'DESC';
+
+			if( $byupdated == 'ASC' ) {
+				$sort['dir'] = 'ASC';
+			}
+		}
+
+		return $sort;
+	}
+
+
+	/* =========================================================================
+	 *  HTML output convenience functions
+	 */
 
 	/**
 	 * A convenience function to generate an embedcategory error message
@@ -78,25 +140,67 @@ class EmbedCategory {
 
 
 	/**
-	 * Given the body of an embedcategory tag, generate an array of
-	 * page titles to ignore.
+	 * A function to generate a string containing a HTML list item with
+	 * link with the specified text.
 	 *
-	 * @todo Potential enhancement would be to ignore lines that
-	 *       are not valid titles. Not sure if it's worth the
-	 *       time and overhead, though.
-	 *
-	 * @param string body The body of the embedcategory tag
-	 * @return array An array of page titles to ignore.
+	 * @param string $link The URL to set as the link href.
+	 * @param string $text The text to show as the link.
+	 * @return string A string containing the HTML list item and link
+	 *                elements.
 	 */
-	public static function buildExcludeList( $body ) {
+	public static function listItem( $link, $text ) {
 
-		$lines = explode( "\n", $body );
-
-		# TODO: check lines are valid titles?
-
-		return $lines;
+		return Html::rawElement( 'li',
+			[],
+			Html::element( 'a',
+				array( 'href' => $link ),
+				$text
+			)
+		);
 	}
 
+
+ 	/**
+	 * A function to generate a string containing a HTML list item with
+	 * link to the specified page as a bold "More" link.
+	 *
+	 * @param Title $title The title of the page to link to.
+	 * @return string A string containing the HTML list item and link
+	 *                elements.
+	 */
+   public static function moreLink( $title ) {
+
+		return Html::rawElement( 'li',
+			[],
+			self::strongLink( $title->getLinkURL(),
+				wfMessage( 'embedcategory-more' )
+			)
+ 		);
+	}
+
+
+ 	/**
+	 * A function to generate HTML indicating that the category is empty.
+	 *
+	 * @param Title $title The title of the category.
+	 * @return string A string containing the HTML indicating that the
+	 *                category is empty.
+	 */
+	public static function emptyCategory( $title ) {
+
+		return Html::rawElement( 'div',
+			[],
+			wfMessage( 'embedcategory-empty' ) .
+				self::strongLink( $title->getLinkURL(),
+					$title->getText()
+				)
+		);
+	}
+
+
+	/* =========================================================================
+	 *  Implementation functions
+	 */
 
 	/**
 	 * Generate a string of HTML containing links to pages in a category,
@@ -111,7 +215,7 @@ class EmbedCategory {
 	 * @param array $exclude An
 	 * @return string The HTML containing the page links.
 	 */
-	public static function buildCategoryList( $name, $limit = false, $showMore = true, $exclude = array() ) {
+	public static function buildCategoryList( $name, $limit = false, $showMore = true, $byupdated = false, $exclude = array() ) {
 		global $wgEmbedCategoryLinkEmpty;
 		$result = "";
 
@@ -124,47 +228,25 @@ class EmbedCategory {
 		// If there are no pages, and an empty cateogry link should be
 		// generated, do so.
 		if( $wgEmbedCategoryLinkEmpty && !$category->getPageCount() ) {
-			$catTitle = $category->getTitle();
-
-			return Html::rawElement( 'div',
-				[],
-				wfMessage( 'embedcategory-empty' ) .
-					self::strongLink( $catTitle->getLinkURL(),
-						$catTitle->getText()
-					)
-			);
+			self::emptyCategory( $category->getTitle() );
 		}
 
+		$sort = self::getSortParams( $byupdated );
+
 		// Convert the list of category members to a string of HTML elements
-		$members  = $category->getMembers( $limit );
-		while( $members->valid() ) {
-			$member = $members->current();
+		$members  = self::getMembersSortable( $category -> getName(), $limit, '', $sort );
+		foreach ( $members as $member ) {
 
 			// Ignore pages if they are in the ignore list.
 			if( !in_array( $member->getText(), $exclude, true ) ) {
-				$result .= Html::rawElement( 'li',
-					[],
-					Html::element( 'a',
-						array( 'href' => $member->getLinkURL() ),
-						$member->getText()
-					)
-				);
+				$result .= self::listItem( $member->getLinkURL(), $member->getText() );
 			}
-
-			$members->next();
 		}
 
 		// If there are more pages in the category than the limit, and the
 		// 'show more' option is enabled, output a 'More' link at the end.
 		if( $showMore && $limit && $category->getPageCount() > $limit ) {
-			$catTitle = $category->getTitle();
-
-			$result .= Html::rawElement( 'li',
-				[],
-				self::strongLink( $catTitle->getLinkURL(),
-					wfMessage( 'embedcategory-more' )
-				)
- 			);
+			$result .= self::moreLink( $category->getTitle() );
 		}
 
 		return Html::rawelement( 'div',
@@ -175,6 +257,10 @@ class EmbedCategory {
 		);
 	}
 
+
+	/* =========================================================================
+	 *  MediaWiki hook and interaction functions
+	 */
 
 	/**
 	 * Parser hook handler for <embedcategory>
@@ -191,23 +277,85 @@ class EmbedCategory {
 		global $wgOut;
 
 		// Only generate the list if the category is specified
-		if($args['category']) {
+		if( self::getParameter( $args, 'category' ) ) {
 			// Obtain the body of the tag (with template expansions) and
 			// convert it to an exclude list
 			$body    = $parser->recursiveTagParse( $input, $frame );
 			$exclude = self::buildExcludeList($body);
 
-			if($args['columns']) {
+			if( self::getParameter( $args, 'columns' ) ) {
 
 			} else {
 				return self::buildCategoryList( $args['category'],
-					$args['limit'],
-					$args['showmore'],
+					self::getParameter( $args, 'limit' ),
+					self::getParameter( $args, 'showmore' ),
+					self::getParameter( $args, 'byupdated' ),
 					$exclude
 				);
 			}
 		} else {
 			return self::errorDiv( wfMessage( 'embedcategory-none' ) );
 		}
+	}
+
+
+	/**
+	 * Register the <embedcategory> tag with the Parser.
+	 *
+	 * @param $parser Parser instance of Parser
+	 * @return boolean Always returns true
+	 */
+	public static function onParserFirstCallInit( &$parser ) {
+		// Adds the <embedcategory>...</embedcategory> tag to the parser.
+		$parser->setHook( 'embedcategory', 'EmbedCategory::parserHook' );
+
+		return true;
+	}
+
+
+	/**
+	 * Modified version of Category::getMembers() that supports changing the
+	 * sort order of pages returned.
+	 *
+	 * @param string $name The name of the category
+	 * @param int|boolean $limit Optional limit to the number of results
+	 * @param string $offset If set, fetch results starting at this page.
+	 * @param array $sort An array containing the 'order' and 'dir' to sort
+	 *                    results by.
+	 * @return TitleArray The array of category members
+	 *
+	 * @note The _nice_ way to do this would be to subclass Category and
+	 *       either override getMemebers() or add this. However, all of
+	 *       Category's member variables are private, so we can't do that.
+	 *       So, in normal PHP-pile-of-kludges-fashion, we have this mess.
+	 */
+	public static function getMembersSortable( $name, $limit = false, $offset = '',
+		$sort = array ( 'order' => 'cl_sortkey', 'dir' => 'ASC' ) ) {
+
+		$dbr = wfGetDB( DB_REPLICA );
+
+		$conds = [ 'cl_to' => $name, 'cl_from = page_id' ];
+		$options = [ 'ORDER BY' => $sort['order'] . ' ' . $sort['dir'] ];
+
+		if ( $limit ) {
+			$options['LIMIT'] = $limit;
+		}
+
+		if ( $offset !== '' ) {
+			$conds[] = 'cl_sortkey > ' . $dbr->addQuotes( $offset );
+		}
+
+		$result = TitleArray::newFromResult(
+			$dbr->select(
+				[ 'page', 'categorylinks' ],
+				[ 'page_id', 'page_namespace', 'page_title', 'page_len',
+				  'page_is_redirect', 'page_latest' ],
+				$conds,
+				__METHOD__,
+				$options
+			)
+		);
+
+		return $result;
 	}
 }

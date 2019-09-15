@@ -52,7 +52,7 @@ pages in the category and its subcategories will be listed.</dd>
 
 <dl>
 <dt><code>showmore=&lt;0|1&gt;</code></dt>
-<dd>This parameter is optional, and defaults to 1. If you set the <code>limit<code> parameter,
+<dd>This parameter is optional, and defaults to 1. If you set the <code>limit</code> parameter,
 and the category contains more pages than that, and <code>showmore</code> is set to 1, a
 <code>More</code> link will be appended to the list of pages that will take the reader to
 the category page. If set to 0, no link will be added even if the full list of

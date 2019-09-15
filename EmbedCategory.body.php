@@ -22,7 +22,7 @@
  * @file
  * @ingroup Extensions
  * @author Chris Page <chris@starforge.co.uk>
- * @copyright Copyright © 219 Chris Page
+ * @copyright Copyright © 2019 Chris Page
  * @license GNU General Public Licence 2.0 or later
  */
 

@@ -1,30 +1,30 @@
 {
-    "name": "EmbedCategory",
-    "version": "1.0.0",
-    "license-name": "GPL-2.0+",
-    "author": [
-	"Chris Page"
-    ],
-    "url": "https://www.mediawiki.org/wiki/Extension:EmbedCategory",
-    "descriptionmsg": "embedcategory-desc",
-    "type": "parserhook",
-    "MessagesDirs": {
-	"EmbedCategory": [
-	    "i18n"
-	]
-    },
-    "config": {
-	"EmbedCategoryLinkEmpty": true
-    },
-    "AutoloadClasses": {
-	"EmbedCategory": "EmbedCategory.body.php"
-    },
-    "ResourceFileModulePaths": {
-	"localBasePath": "",
-	"remoteExtPath": "EmbedCategory"
-    },
-    "Hooks": {
-	"ParserFirstCallInit": "EmbedCategory::onParserFirstCallInit"
-    },
-    "manifest_version": 1
+	"name": "EmbedCategory",
+	"version": "1.0.0",
+	"license-name": "GPL-2.0+",
+	"author": [
+		"Chris Page"
+	],
+	"url": "https://www.mediawiki.org/wiki/Extension:EmbedCategory",
+	"descriptionmsg": "embedcategory-desc",
+	"type": "parserhook",
+	"MessagesDirs": {
+		"EmbedCategory": [
+			"i18n"
+		]
+	},
+	"config": {
+		"EmbedCategoryLinkEmpty": true
+	},
+	"AutoloadClasses": {
+		"EmbedCategory": "EmbedCategory.body.php"
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteExtPath": "EmbedCategory"
+	},
+	"Hooks": {
+		"ParserFirstCallInit": "EmbedCategory::onParserFirstCallInit"
+	},
+	"manifest_version": 1
 }

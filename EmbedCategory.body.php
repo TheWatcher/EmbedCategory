@@ -100,6 +100,35 @@ class EmbedCategory {
 	}
 
 
+	/**
+	 * Given an object containing a category member query row, generate the
+	 * text, url, and fulltext to be shown in links.
+	 *
+	 * @param object A category query row.
+	 * @return An array containing the text, url, and fulltext to show for
+	 *         this row.
+	 */
+	public static function getResultData( $data ) {
+
+		$title = Title::newFromID( $data->page_id );
+		$fulltext = $title -> getText();
+
+		// If a sort key has been specified, use it as the text
+		// From the mediawiki tech docs, "This is either the empty string if
+		// a page is using the default sortkey (aka the sortkey is unspecified).
+		// Otherwise it is the human readable version of cl_sortkey)"
+		if( $data->cl_sortkey_prefix ) {
+			$fulltext = $data->cl_sortkey_prefix;
+		}
+
+		return array(
+			'text'     => $title -> getText(),
+			'url'      => $title -> getLinkURL(),
+			'fulltext' => $fulltext
+		);
+	}
+
+
 	/* =========================================================================
 	 *  HTML output convenience functions
 	 */
@@ -116,6 +145,22 @@ class EmbedCategory {
 		return Html::rawelement( 'div',
 			array( 'class' => 'embedcategory error' ),
 			$message );
+	}
+
+
+	/**
+	 * A convenience function to generate a string containing a HTML link
+	 *
+	 * @param string $link The URL to set as the link href.
+	 * @param string $text The text to show as the link.
+	 * @return string A string containing the HTML <a> element.
+	 */
+	public static function link( $link, $text ) {
+
+		return Html::element( 'a',
+			array( 'href' => $link ),
+			$text
+		);
 	}
 
 
@@ -208,14 +253,13 @@ class EmbedCategory {
 	 *
 	 * @param string $name The name of the category, not including the
 	 *					   Category: namespace
-	 * @param integer $limit The number of pages to link to.
-	 * @param boolean $showMore If there are more pages in the category than
-	 *							$limit, and this is true, a link to the
-	 *							category is added to the list of links.
-	 * @param array $exclude An
+	 * @param array  $args An array containing parameters to control limit,
+	 *                     sort direction, and more link visibility.
+	 * @param array  $exclude A list of page names to exclude from the displayed
+	 *                        items.
 	 * @return string The HTML containing the page links.
 	 */
-	public static function buildCategoryList( $name, $limit = false, $showMore = true, $byupdated = false, $exclude = array() ) {
+	public static function buildCategoryList( $name, $args, $exclude = array() ) {
 		global $wgEmbedCategoryLinkEmpty;
 		$result = "";
 
@@ -231,21 +275,25 @@ class EmbedCategory {
 			self::emptyCategory( $category->getTitle() );
 		}
 
-		$sort = self::getSortParams( $byupdated );
+		$sort = self::getSortParams( $args['byupdated'] );
 
 		// Convert the list of category members to a string of HTML elements
-		$members  = self::getMembersSortable( $category -> getName(), $limit, '', $sort );
-		foreach ( $members as $member ) {
+		$rows  = self::getMembersSortable( $category -> getName(),
+										   $args['limit'],
+										   '',
+										   $sort );
+		foreach ( $rows as $row ) {
+			$values = self::getResultData( $row );
 
 			// Ignore pages if they are in the ignore list.
-			if( !in_array( $member->getText(), $exclude, true ) ) {
-				$result .= self::listItem( $member->getLinkURL(), $member->getText() );
+			if( !in_array( $values['text'], $exclude, true ) ) {
+				$result .= self::listItem( $values['url'], $values['fulltext'] );
 			}
 		}
 
 		// If there are more pages in the category than the limit, and the
 		// 'show more' option is enabled, output a 'More' link at the end.
-		if( $showMore && $limit && $category->getPageCount() > $limit ) {
+		if( $args['showmore'] && $args['limit'] && $category->getPageCount() > $args['limit'] ) {
 			$result .= self::moreLink( $category->getTitle() );
 		}
 
@@ -257,6 +305,47 @@ class EmbedCategory {
 		);
 	}
 
+
+	/**
+	 * Generate a string of HTML containing links to pages in a category,
+	 * suitable for insertion into a Navbox list.
+	 *
+	 * @param string $name The name of the category, not including the
+	 *					   Category: namespace
+	 * @param array  $args An array containing parameters to control limit
+	 *                     and sort direction.
+	 * @param array  $exclude A list of page names to exclude from the displayed
+	 *                        items.
+	 * @return string The HTML containing the page links.
+	 */
+	public static function buildCategoryNavlist( $name, $args, $exclude = array() ) {
+
+		$category = Category::newFromName( $name );
+		if( !$category ) {
+			return self::errorDiv( wfMessage( 'embedcategory-bad' ) );
+		}
+
+		$sort = self::getSortParams( $args['byupdated'] );
+
+		// Convert the list of category members to a string of HTML elements
+		$rows  = self::getMembersSortable( $category -> getName(),
+										   $args['limit'],
+										   '',
+										   $sort );
+
+		$result = array();
+		foreach ( $rows as $row ) {
+			$values = self::getResultData( $row );
+
+			// Ignore pages if they are in the ignore list.
+			if( !in_array( $values['text'], $exclude, true ) ) {
+				$result[] = self::link($values['url'], $values['fulltext'] );
+			}
+		}
+
+		return implode( '&nbsp;<span style="font-weight:bold;">&middot;</span> ',
+						$result );
+	}
 
 	/* =========================================================================
 	 *  MediaWiki hook and interaction functions
@@ -283,13 +372,23 @@ class EmbedCategory {
 			$body    = $parser->recursiveTagParse( $input, $frame );
 			$exclude = self::buildExcludeList($body);
 
+			$params  = array(
+				'limit'     => self::getParameter( $args, 'limit' ),
+				'showmore'  => self::getParameter( $args, 'showmore' ),
+				'byupdated' => self::getParameter( $args, 'byupdated' ),
+			);
+
 			if( self::getParameter( $args, 'columns' ) ) {
+
+			} else if( self::getParameter( $args, 'navlist' ) ) {
+				return self::buildCategoryNavlist( $args['category'],
+					$params,
+					$exclude
+				);
 
 			} else {
 				return self::buildCategoryList( $args['category'],
-					self::getParameter( $args, 'limit' ),
-					self::getParameter( $args, 'showmore' ),
-					self::getParameter( $args, 'byupdated' ),
+					$params,
 					$exclude
 				);
 			}
@@ -315,19 +414,15 @@ class EmbedCategory {
 
 	/**
 	 * Modified version of Category::getMembers() that supports changing the
-	 * sort order of pages returned.
+	 * sort order of pages returned, and returning the raw query results
+	 * rather than a TitleArray, so the cl_sortkey_prefix is accessible.
 	 *
 	 * @param string $name The name of the category
 	 * @param int|boolean $limit Optional limit to the number of results
 	 * @param string $offset If set, fetch results starting at this page.
 	 * @param array $sort An array containing the 'order' and 'dir' to sort
 	 *                    results by.
-	 * @return TitleArray The array of category members
-	 *
-	 * @note The _nice_ way to do this would be to subclass Category and
-	 *       either override getMemebers() or add this. However, all of
-	 *       Category's member variables are private, so we can't do that.
-	 *       So, in normal PHP-pile-of-kludges-fashion, we have this mess.
+	 * @return IResultWrapper The category members
 	 */
 	public static function getMembersSortable( $name, $limit = false, $offset = '',
 		$sort = array ( 'order' => 'cl_sortkey', 'dir' => 'ASC' ) ) {
@@ -345,15 +440,13 @@ class EmbedCategory {
 			$conds[] = 'cl_sortkey > ' . $dbr->addQuotes( $offset );
 		}
 
-		$result = TitleArray::newFromResult(
-			$dbr->select(
-				[ 'page', 'categorylinks' ],
-				[ 'page_id', 'page_namespace', 'page_title', 'page_len',
-				  'page_is_redirect', 'page_latest' ],
-				$conds,
-				__METHOD__,
-				$options
-			)
+		$result = $dbr->select(
+			[ 'page', 'categorylinks' ],
+			[ 'page_id', 'page_namespace', 'page_title', 'page_len',
+			  'page_is_redirect', 'page_latest', 'cl_sortkey_prefix' ],
+			$conds,
+			__METHOD__,
+			$options
 		);
 
 		return $result;

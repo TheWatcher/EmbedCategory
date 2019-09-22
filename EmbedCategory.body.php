@@ -343,6 +343,7 @@ class EmbedCategory {
 			}
 		}
 
+		// Navlist entries are middot-separated
 		return implode( '&nbsp;<span style="font-weight:bold;">&middot;</span> ',
 						$result );
 	}
@@ -416,6 +417,10 @@ class EmbedCategory {
 	 * Modified version of Category::getMembers() that supports changing the
 	 * sort order of pages returned, and returning the raw query results
 	 * rather than a TitleArray, so the cl_sortkey_prefix is accessible.
+	 *
+	 * @note Ideally, this would be done with Category::getMembers(), but that
+	 *       doesn't expose the cl_sortkey_prefix field, and doesn't support
+	 *       alternative sorting methods.
 	 *
 	 * @param string $name The name of the category
 	 * @param int|boolean $limit Optional limit to the number of results

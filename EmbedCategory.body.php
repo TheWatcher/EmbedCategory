@@ -124,7 +124,8 @@ class EmbedCategory {
 		return array(
 			'text'     => $title -> getText(),
 			'url'      => $title -> getLinkURL(),
-			'fulltext' => $fulltext
+			'fulltext' => $fulltext,
+			'char'     => substr($fulltext, 0, 1)
 		);
 	}
 
@@ -243,6 +244,89 @@ class EmbedCategory {
 	}
 
 
+	/**
+	 * Generate the list of pages in the category as a column-compatible
+	 * format similar to CategoryViewer::columnList().
+	 *
+	 * @note This will royally mess up ordering if the rows are not
+	 *       in ascending alphanumeric order. You have been warned.
+	 *
+	 * @param array $rows An array of IResultWrapper objects to show.
+	 * @param array $args An array of control arguments.
+	 * @param array $exlcude A list of page names to exclude from the displayed
+	 *                        items.
+	 * @return string The HTML containing the page links.
+	 */
+	static function buildCategoryColumns( $rows, $args, $exclude ) {
+
+		# Convert the rows to alphanumerically-ordered sublists
+		$charlist = [];
+
+		foreach ( $rows as $row ) {
+ 			$values = self::getResultData( $row );
+
+			// Ignore pages if they are in the ignore list.
+			if( !in_array( $values['text'], $exclude, true ) ) {
+				if( !isset( $charlist[$values['char']] ) ) {
+					$charlist[$values['char']] = [];
+				}
+
+				$charlist[$values['char']][] = $values;
+			}
+		}
+
+		$result = "";
+		foreach ( $charlist as $char => $rows ){
+			$h3char = $char === ' ' ? "\u{00A0}" : htmlspecialchars( $char );
+
+			$result .= '<div class="mw-category-group">';
+
+			if( $args['headers'] ) {
+				$result .= '<h3>' . $h3char . "</h3>\n";
+			}
+
+			$result .= '<ul>';
+
+			foreach ( $rows as $values ) {
+				$result .= self::listItem( $values['url'], $values['fulltext'] );
+			}
+
+			$result .= '</ul></div>';
+		}
+
+		return $result;
+	}
+
+
+	/**
+	 * Generate the list of pages in the category as a sorted list. Note that
+	 * this preserves the order of the rows specified, so it can be used to
+	 * display results when `byupdated` is enabled. The downside to this is
+	 * that column display is not supported.
+	 *
+	 * @param array $rows An array of IResultWrapper objects to show.
+	 * @param array $args An array of control arguments.
+	 * @param array $exlcude A list of page names to exclude from the displayed
+	 *                        items.
+	 * @return string The HTML containing the page links.
+	 */
+	public static function buildCategorySorted( $rows, $args, $exclude ) {
+
+		$result = "";
+
+		foreach ( $rows as $row ) {
+ 			$values = self::getResultData( $row );
+
+			// Ignore pages if they are in the ignore list.
+			if( !in_array( $values['text'], $exclude, true ) ) {
+				$result .= self::listItem( $values['url'], $values['fulltext'] );
+			}
+		}
+
+		return Html::rawelement( 'ul', [], $result );
+	}
+
+
 	/* =========================================================================
 	 *  Implementation functions
 	 */
@@ -281,13 +365,11 @@ class EmbedCategory {
 										   $args['limit'],
 										   '',
 										   $sort );
-		foreach ( $rows as $row ) {
-			$values = self::getResultData( $row );
 
-			// Ignore pages if they are in the ignore list.
-			if( !in_array( $values['text'], $exclude, true ) ) {
-				$result .= self::listItem( $values['url'], $values['fulltext'] );
-			}
+		if( $args['format']  == 'columns' ) {
+			$result = self::buildCategoryColumns( $rows, $args, $exclude );
+		} else {
+			$result = self::buildCategorySorted( $rows, $args, $exclude );
 		}
 
 		// If there are more pages in the category than the limit, and the
@@ -297,10 +379,8 @@ class EmbedCategory {
 		}
 
 		return Html::rawelement( 'div',
-			array( 'class' => 'categorylist' ),
-			Html::rawElement( 'ul',
-				[ 'class' => 'category_members' ],
-				$result )
+			array( 'class' => 'mw-category' ),
+			$result
 		);
 	}
 
@@ -347,6 +427,7 @@ class EmbedCategory {
 						$result );
 	}
 
+
 	/* =========================================================================
 	 *  MediaWiki hook and interaction functions
 	 */
@@ -376,11 +457,11 @@ class EmbedCategory {
 				'limit'     => self::getParameter( $args, 'limit' ),
 				'showmore'  => self::getParameter( $args, 'showmore' ),
 				'byupdated' => self::getParameter( $args, 'byupdated' ),
+				'format'    => self::getParameter( $args, 'format' , 'list' ),
+				'headers'   => self::getParameter( $args, 'headers', true )
 			);
 
-			if( self::getParameter( $args, 'columns' ) ) {
-
-			} else if( self::getParameter( $args, 'navlist' ) ) {
+			if( $params['format'] == 'navlist' ) {
 				return self::buildCategoryNavlist( $args['category'],
 					$params,
 					$exclude

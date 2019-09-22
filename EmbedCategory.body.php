@@ -41,7 +41,7 @@ class EmbedCategory {
 	 * @param mixed  $default The value to return if the parameter is not set.
 	 * @return mixed The value set for the parameter, or the default.
 	 */
-	public static function getParameter( &$args, $name, $default = false) {
+	static function getParameter( &$args, $name, $default = false) {
 
 		if( isset( $args[$name] ) ) {
 			return $args[$name];
@@ -62,7 +62,7 @@ class EmbedCategory {
 	 * @param string body The body of the embedcategory tag
 	 * @return array An array of page titles to ignore.
 	 */
-	public static function buildExcludeList( $body ) {
+	static function buildExcludeList( $body ) {
 
 		$lines = explode( "\n", $body );
 
@@ -82,7 +82,7 @@ class EmbedCategory {
 	 *        to descending. If false, the sort will be by sortkey ascending.
 	 * @return array An array containing the sort parameters.
 	 */
-	public static function getSortParams( $byupdated ) {
+	static function getSortParams( $byupdated ) {
 
 		$sort = array( 'order' => 'cl_sortkey',
 					   'dir'   => 'ASC' );
@@ -108,7 +108,7 @@ class EmbedCategory {
 	 * @return An array containing the text, url, and fulltext to show for
 	 *         this row.
 	 */
-	public static function getResultData( $data ) {
+	static function getResultData( $data ) {
 
 		$title = Title::newFromID( $data->page_id );
 		$fulltext = $title -> getText();
@@ -140,7 +140,7 @@ class EmbedCategory {
 	 * @param string $message The error message to show in the div.
 	 * @return string A HTML element containing the error message.
 	 */
-	public static function errorDiv( $message ) {
+	static function errorDiv( $message ) {
 
 		return Html::rawelement( 'div',
 			array( 'class' => 'embedcategory error' ),
@@ -155,7 +155,7 @@ class EmbedCategory {
 	 * @param string $text The text to show as the link.
 	 * @return string A string containing the HTML <a> element.
 	 */
-	public static function link( $link, $text ) {
+	static function link( $link, $text ) {
 
 		return Html::element( 'a',
 			array( 'href' => $link ),
@@ -213,9 +213,9 @@ class EmbedCategory {
 	 * @return string A string containing the HTML list item and link
 	 *                elements.
 	 */
-   public static function moreLink( $title ) {
+   static function moreLink( $title ) {
 
-		return Html::rawElement( 'li',
+		return Html::rawElement( 'div',
 			[],
 			self::strongLink( $title->getLinkURL(),
 				wfMessage( 'embedcategory-more' )
@@ -231,7 +231,7 @@ class EmbedCategory {
 	 * @return string A string containing the HTML indicating that the
 	 *                category is empty.
 	 */
-	public static function emptyCategory( $title ) {
+	static function emptyCategory( $title ) {
 
 		return Html::rawElement( 'div',
 			[],
@@ -259,9 +259,8 @@ class EmbedCategory {
 	 *                        items.
 	 * @return string The HTML containing the page links.
 	 */
-	public static function buildCategoryList( $name, $args, $exclude = array() ) {
+	static function buildCategoryList( $name, $args, $exclude = array() ) {
 		global $wgEmbedCategoryLinkEmpty;
-		$result = "";
 
 		// Fetch the category information
 		$category = Category::newFromName( $name );
@@ -318,7 +317,7 @@ class EmbedCategory {
 	 *                        items.
 	 * @return string The HTML containing the page links.
 	 */
-	public static function buildCategoryNavlist( $name, $args, $exclude = array() ) {
+	static function buildCategoryNavlist( $name, $args, $exclude = array() ) {
 
 		$category = Category::newFromName( $name );
 		if( !$category ) {
@@ -429,7 +428,7 @@ class EmbedCategory {
 	 *                    results by.
 	 * @return IResultWrapper The category members
 	 */
-	public static function getMembersSortable( $name, $limit = false, $offset = '',
+	static function getMembersSortable( $name, $limit = false, $offset = '',
 		$sort = array ( 'order' => 'cl_sortkey', 'dir' => 'ASC' ) ) {
 
 		$dbr = wfGetDB( DB_REPLICA );

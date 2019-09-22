@@ -44,7 +44,7 @@ should not be included.</dd>
 </dl>
 
 <dl>
-<dt><code>format="&lt;list|columns|navlist%gt;"</code></dt>
+<dt><code>format="&lt;list|columns|navlist&gt;"</code></dt>
 <dd>This parameter is optional, and defaults to <code>list</code>. If specified,
 you can either set <code>list</code>, in which case pages in the category are
 listed in a single vertical list; <code>columns</code> in which case the pages

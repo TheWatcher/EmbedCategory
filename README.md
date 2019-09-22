@@ -44,6 +44,24 @@ should not be included.</dd>
 </dl>
 
 <dl>
+<dt><code>format="&lt;list|columns|navlist%gt;"</code></dt>
+<dd>This parameter is optional, and defaults to <code>list</code>. If specified,
+you can either set <code>list</code>, in which case pages in the category are
+listed in a single vertical list; <code>columns</code> in which case the pages
+are listed in a way that will automatically form them into columns when enough
+pages are in the category; or <code>navlist</code> where the pages are listed
+as links separated by &middot; dots suitable for insertion into Navbox lists.</dd>
+</dl>
+
+<dl>
+<dt><code>headers=&lt;0|1&gt;</code></dt>
+<dd>This parameter is optional and defaults to 1. If set to 1, and <code>format</code>
+is set to <code>columns</code>, this will insert headers for each set of first
+page characters. If set to 0, no headers will be output. Note that this is ignored
+for <code>list</code> and <code>navlist</code> formats.</dd>
+</dl>
+
+<dl>
 <dt><code>limit=&lt;integer&gt;</code></dt>
 <dd>This parameter is optional. If specified, this will limit the length of the
 page list to the value given here. If you do not specify a limit, all the
@@ -66,7 +84,9 @@ category are listed according to how recently updated their entry in the categor
 was. Typically this will be when they were added to the category, not when the page
 itself was updated! By default they are sorted most recently added/updated first,
 to least recently added/updated last. If <code>byupdated</code> is set to <code>ASC</code>
-then the order is reversed: the oldest page is shown first, and the newest last.</dd>
+then the order is reversed: the oldest page is shown first, and the newest last.
+<strong>NOTE:</strong> Enabling byupdated will override <code>format</code> to
+<code>list</code> if <code>format</code> has been set to <code>columns</code></dd>
 </dl>
 
 The body of the &lt;embedcategory&gt; tag may contain a list of pages to exclude from

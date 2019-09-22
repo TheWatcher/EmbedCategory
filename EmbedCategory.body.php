@@ -259,9 +259,8 @@ class EmbedCategory {
 	 */
 	static function buildCategoryColumns( $rows, $args, $exclude ) {
 
-		# Convert the rows to alphanumerically-ordered sublists
+		// Convert the rows to alphanumerically-ordered sublists
 		$charlist = [];
-
 		foreach ( $rows as $row ) {
  			$values = self::getResultData( $row );
 
@@ -275,16 +274,19 @@ class EmbedCategory {
 			}
 		}
 
+		// Now convert the alphanumeric lists into groups of lists
 		$result = "";
 		foreach ( $charlist as $char => $rows ){
 			$h3char = $char === ' ' ? "\u{00A0}" : htmlspecialchars( $char );
 
 			$result .= '<div class="mw-embedcategory-group">';
 
+			// Only include headers if headers are enabled
 			if( $args['headers'] ) {
 				$result .= '<h3>' . $h3char . "</h3>\n";
 			}
 
+			// Generate lists of page links
 			$result .= '<ul>';
 
 			foreach ( $rows as $values ) {
@@ -314,6 +316,7 @@ class EmbedCategory {
 
 		$result = "";
 
+		// Convert the rows into a string of list items containing page links
 		foreach ( $rows as $row ) {
  			$values = self::getResultData( $row );
 
@@ -360,12 +363,14 @@ class EmbedCategory {
 
 		$sort = self::getSortParams( $args['byupdated'] );
 
-		// Convert the list of category members to a string of HTML elements
+		// Fetch the list of pages in the category
 		$rows  = self::getMembersSortable( $category -> getName(),
 										   $args['limit'],
 										   '',
 										   $sort );
 
+		// Convert the list of category members to a string of HTML elements
+		// either as columns or a straight list depending on format
 		if( $args['format']  == 'columns' ) {
 			$result = self::buildCategoryColumns( $rows, $args, $exclude );
 		} else {

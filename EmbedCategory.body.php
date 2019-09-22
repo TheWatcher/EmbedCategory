@@ -461,6 +461,11 @@ class EmbedCategory {
 				'headers'   => self::getParameter( $args, 'headers', true )
 			);
 
+			# If byupdated is enabled, we can not use 'columns' mode.
+			if( $params['format'] == 'columns' && $params['byupdated'] ) {
+				$params['format'] = 'list';
+			}
+
 			if( $params['format'] == 'navlist' ) {
 				return self::buildCategoryNavlist( $args['category'],
 					$params,

@@ -279,7 +279,7 @@ class EmbedCategory {
 		foreach ( $charlist as $char => $rows ){
 			$h3char = $char === ' ' ? "\u{00A0}" : htmlspecialchars( $char );
 
-			$result .= '<div class="mw-category-group">';
+			$result .= '<div class="mw-embedcategory-group">';
 
 			if( $args['headers'] ) {
 				$result .= '<h3>' . $h3char . "</h3>\n";
@@ -379,7 +379,7 @@ class EmbedCategory {
 		}
 
 		return Html::rawelement( 'div',
-			array( 'class' => 'mw-category' ),
+			array( 'class' => 'mw-embedcategory ' . htmlspecialchars( $args['format']) ),
 			$result
 		);
 	}

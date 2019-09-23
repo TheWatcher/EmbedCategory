@@ -91,7 +91,7 @@ class EmbedCategory {
 			$sort['order'] = 'cl_timestamp';
 			$sort['dir']   = 'DESC';
 
-			if( $byupdated == 'ASC' ) {
+			if( $byupdated === 'ASC' ) {
 				$sort['dir'] = 'ASC';
 			}
 		}
@@ -371,7 +371,7 @@ class EmbedCategory {
 
 		// Convert the list of category members to a string of HTML elements
 		// either as columns or a straight list depending on format
-		if( $args['format']  == 'columns' ) {
+		if( $args['format']  === 'columns' ) {
 			$result = self::buildCategoryColumns( $rows, $args, $exclude );
 		} else {
 			$result = self::buildCategorySorted( $rows, $args, $exclude );
@@ -458,6 +458,7 @@ class EmbedCategory {
 			$body    = $parser->recursiveTagParse( $input, $frame );
 			$exclude = self::buildExcludeList($body);
 
+			// Build an array of parameters to pass around
 			$params  = array(
 				'limit'     => self::getParameter( $args, 'limit' ),
 				'showmore'  => self::getParameter( $args, 'showmore' ),
@@ -466,12 +467,12 @@ class EmbedCategory {
 				'headers'   => self::getParameter( $args, 'headers', true )
 			);
 
-			# If byupdated is enabled, we can not use 'columns' mode.
-			if( $params['format'] == 'columns' && $params['byupdated'] ) {
+			// If byupdated is enabled, we can not use 'columns' mode.
+			if( $params['format'] === 'columns' && $params['byupdated'] ) {
 				$params['format'] = 'list';
 			}
 
-			if( $params['format'] == 'navlist' ) {
+			if( $params['format'] === 'navlist' ) {
 				return self::buildCategoryNavlist( $args['category'],
 					$params,
 					$exclude

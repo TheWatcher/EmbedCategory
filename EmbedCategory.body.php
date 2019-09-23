@@ -173,7 +173,7 @@ class EmbedCategory {
 	 * @param string $text The text to show as the link.
 	 * @return string A string containing the HTML <a> element.
 	 */
-	public static function strongLink( $link, $text ) {
+	static function strongLink( $link, $text ) {
 
 		return Html::rawElement( 'a',
 			array( 'href' => $link ),
@@ -194,7 +194,7 @@ class EmbedCategory {
 	 * @return string A string containing the HTML list item and link
 	 *                elements.
 	 */
-	public static function listItem( $link, $text ) {
+	static function listItem( $link, $text ) {
 
 		return Html::rawElement( 'li',
 			[],

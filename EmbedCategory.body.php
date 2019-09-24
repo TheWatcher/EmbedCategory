@@ -117,6 +117,7 @@ class EmbedCategory {
 		// From the mediawiki tech docs, "This is either the empty string if
 		// a page is using the default sortkey (aka the sortkey is unspecified).
 		// Otherwise it is the human readable version of cl_sortkey)"
+		// NOTE: if the categorylinks schema is changed, this will need fixing!
 		if( $data->cl_sortkey_prefix ) {
 			$fulltext = $data->cl_sortkey_prefix;
 		}
